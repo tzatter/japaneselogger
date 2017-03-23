@@ -1,6 +1,7 @@
 # インストール
+Python3のみ動作確認済み、PYPIに登録していますのでpipからインストール出来ます https://pypi.python.org/pypi/japaneselogger
 ```
-pip install japaneselogger
+pip3 install japaneselogger
 ```
 # 使い方
 Debug, Info, Warning, Error, Criticalの全てのメッセージは"***.debug.log"ファイルに保存される
