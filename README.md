@@ -4,9 +4,9 @@ Python3のみ動作確認済み、PYPIに登録していますのでpipからイ
 pip3 install japaneselogger
 ```
 ## 使い方
-Debug, Info, Warning, Error, Criticalの全てのメッセージは"***.debug.log"ファイルに保存される
+Errorを含むDebug以上の全てのメッセージは"***.debug.log"ファイルに保存される
 
-Error, Criticalは"***.error.log"ファイルに保存される
+Errorだけは"***.error.log"ファイルに保存される
 
 **ソースコードの例**
 ```python
