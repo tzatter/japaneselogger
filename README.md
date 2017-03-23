@@ -1,3 +1,8 @@
+#インストール
+```
+pip install japaneselogger
+```
+#使い方
 Debug, Info, Warning, Error, Criticalの全てのメッセージは"***.debug.log"ファイルに保存される
 
 Error, Criticalは"***.error.log"ファイルに保存される
