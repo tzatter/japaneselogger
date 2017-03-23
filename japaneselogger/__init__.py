@@ -57,6 +57,12 @@ _fhe.setLevel(logging.ERROR)
 _fhe.setFormatter(_formatter)
 logger.addHandler(_fhe)
 
+#関数を上書き
+debug = logger.debug
+info = logger.info
+warn = logger.warn
+error = logger.error
+exception = logger.exception
 
 #メール通知機能
 def enableEMailNotification(
