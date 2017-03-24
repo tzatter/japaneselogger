@@ -16,7 +16,7 @@ from logging.handlers import SMTPHandler,RotatingFileHandler
 from logging import Handler
 import smtplib
 import subprocess
-
+import os
 
 #最初に直接呼び出されて実行されたmainファイル名をログファイルの名前にする
 import sys
@@ -25,6 +25,11 @@ try:
     LOGNAME = basename(splitext(sys.modules['__main__'].__file__)[0])
 except AttributeError:
     LOGNAME = "japaneselogger"
+    
+DIRNAME = "{}_log".format(LOGNAME)
+#ログファイルを保存するディレクトリを作成
+if not os.path.exists(DIRNAME):
+    os.makedirs(DIRNAME)
 
 #デバッグ以上のロガーの設定
 logger = logging.getLogger(LOGNAME)
@@ -41,7 +46,7 @@ _ch.setFormatter(_formatter)
 logger.addHandler(_ch)
 
 #1ファイルにつき最大1Mバイトまで、最大5ファイルまで保管
-_fhd = RotatingFileHandler("{}.debug.log".format(LOGNAME),
+_fhd = RotatingFileHandler("{}.debug.log".format(os.path.join(DIRNAME,LOGNAME)),
                         maxBytes=10**6,
                         backupCount=5)
 _fhd.setLevel(logging.DEBUG)
@@ -50,7 +55,7 @@ logger.addHandler(_fhd)
 
 #エラー以上のハンドラの設定
 #1ファイルにつき最大1Mバイトまで、最大5ファイルまで保管
-_fhe = RotatingFileHandler("{}.error.log".format(LOGNAME),
+_fhe = RotatingFileHandler("{}.error.log".format(os.path.join(DIRNAME,LOGNAME)),
                         maxBytes=10**6,
                         backupCount=5)
 _fhe.setLevel(logging.ERROR)
