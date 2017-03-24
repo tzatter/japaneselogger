@@ -11,7 +11,7 @@ Errorだけは"***.error.log"ファイルに保存される
 **ソースコードの例**
 ```python
 # -*- coding: utf-8 -*-
-from japaneselogger import debug,error,exception
+from japaneselogger import logger,debug,info,warn,error,exception
 if __name__ == '__main__':
     debug("デバッグ")
     error("エラー")
