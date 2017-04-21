@@ -26,7 +26,7 @@ try:
 except AttributeError:
     LOGNAME = "japaneselogger"
     
-DIRNAME = "{}_log".format(LOGNAME)
+DIRNAME = "log"
 #ログファイルを保存するディレクトリを作成
 if not os.path.exists(DIRNAME):
     os.makedirs(DIRNAME)
@@ -36,7 +36,7 @@ logger = logging.getLogger(LOGNAME)
 logger.setLevel(logging.DEBUG)
 
 #ログの出力形式の設定
-_formatter = logging.Formatter('%(asctime)s %(levelname)s %(filename)s %(lineno)s %(message)s',datefmt='%m/%d %H:%M:%S')
+_formatter = logging.Formatter('[%(asctime)s %(levelname)s %(filename)s %(lineno)s] %(message)s',datefmt='%m/%d %H:%M:%S')
 
 #デバッグ以上のハンドラの設定
 #ストリームに出力
