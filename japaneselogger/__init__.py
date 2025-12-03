@@ -2,7 +2,7 @@
 '''
 Created on 2017/03/17
 
-@author: takasi
+@author: tzatter
 
 loggingについてのチュートリアル
 https://docs.python.jp/3/howto/logging.html
@@ -12,60 +12,80 @@ https://docs.python.jp/3/howto/logging.html
 ・デスクトップ通知機能、notify-sendコマンドが端末で使える事
 '''
 import logging
-from logging.handlers import SMTPHandler,RotatingFileHandler
-from logging import Handler
+import os
 import smtplib
 import subprocess
-import os
-
-#最初に直接呼び出されて実行されたmainファイル名をログファイルの名前にする
 import sys
+from logging import Handler
+from logging.handlers import RotatingFileHandler, SMTPHandler
 from os.path import basename, splitext
-try:
-    LOGNAME = basename(splitext(sys.modules['__main__'].__file__)[0])
-except AttributeError:
-    LOGNAME = "japaneselogger"
-    
+
+
 DIRNAME = "log"
-#ログファイルを保存するディレクトリを作成
-if not os.path.exists(DIRNAME):
-    os.makedirs(DIRNAME)
+MAX_LOG_BYTES = 10 ** 6
+BACKUP_COUNT = 5
+DATE_FORMAT = "%m/%d %H:%M:%S"
 
-#デバッグ以上のロガーの設定
-logger = logging.getLogger(LOGNAME)
-logger.setLevel(logging.DEBUG)
 
-#ログの出力形式の設定
-_formatter = logging.Formatter('[%(asctime)s %(levelname)s %(filename)s %(lineno)s] %(message)s',datefmt='%m/%d %H:%M:%S')
+def _resolve_logname():
+    try:
+        return basename(splitext(sys.modules["__main__"].__file__)[0])
+    except AttributeError:
+        return "japaneselogger"
 
-#デバッグ以上のハンドラの設定
-#ストリームに出力
-_ch = logging.StreamHandler()
-_ch.setLevel(logging.DEBUG)
-_ch.setFormatter(_formatter)
-logger.addHandler(_ch)
 
-#1ファイルにつき最大1Mバイトまで、最大5ファイルまで保管
-_fhd = RotatingFileHandler("{}.debug.log".format(os.path.join(DIRNAME,LOGNAME)),
-                        maxBytes=10**6,
-                        backupCount=5)
-_fhd.setLevel(logging.DEBUG)
-_fhd.setFormatter(_formatter)
-logger.addHandler(_fhd)
+def _ensure_log_directory():
+    if not os.path.exists(DIRNAME):
+        os.makedirs(DIRNAME)
 
-#エラー以上のハンドラの設定
-#1ファイルにつき最大1Mバイトまで、最大5ファイルまで保管
-_fhe = RotatingFileHandler("{}.error.log".format(os.path.join(DIRNAME,LOGNAME)),
-                        maxBytes=10**6,
-                        backupCount=5)
-_fhe.setLevel(logging.ERROR)
-_fhe.setFormatter(_formatter)
-logger.addHandler(_fhe)
+
+def _create_formatter():
+    return logging.Formatter(
+        "[%(asctime)s %(levelname)s %(filename)s %(lineno)s] %(message)s",
+        datefmt=DATE_FORMAT,
+    )
+
+
+def _add_stream_handler(target_logger, formatter):
+    handler = logging.StreamHandler()
+    handler.setLevel(logging.DEBUG)
+    handler.setFormatter(formatter)
+    target_logger.addHandler(handler)
+
+
+def _add_rotating_handler(target_logger, formatter, level, suffix):
+    handler = RotatingFileHandler(
+        "{}.{}.log".format(os.path.join(DIRNAME, LOGNAME), suffix),
+        maxBytes=MAX_LOG_BYTES,
+        backupCount=BACKUP_COUNT,
+    )
+    handler.setLevel(level)
+    handler.setFormatter(formatter)
+    target_logger.addHandler(handler)
+
+
+def _setup_logger():
+    logger_instance = logging.getLogger(LOGNAME)
+    logger_instance.setLevel(logging.DEBUG)
+
+    if logger_instance.handlers:
+        return logger_instance
+
+    _add_stream_handler(logger_instance, FORMATTER)
+    _add_rotating_handler(logger_instance, FORMATTER, logging.DEBUG, "debug")
+    _add_rotating_handler(logger_instance, FORMATTER, logging.ERROR, "error")
+    return logger_instance
+
+
+LOGNAME = _resolve_logname()
+FORMATTER = _create_formatter()
+_ensure_log_directory()
+logger = _setup_logger()
 
 #関数を上書き
 debug = logger.debug
 info = logger.info
-warn = logger.warn
+warn = logger.warning
 error = logger.error
 exception = logger.exception
 
@@ -82,12 +102,12 @@ def enableEMailNotification(
         server.connect(SMTP_HOST, SMTP_PORT)
         server.close()
         
-        sh = logging.handlers.SMTPHandler(mailhost=(SMTP_HOST, SMTP_PORT),
-                                          fromaddr=LOGNAME,
-                                          toaddrs=EMAIL_TO_ADDRESS,
-                                          subject=LOGNAME)
+        sh = SMTPHandler(mailhost=(SMTP_HOST, SMTP_PORT),
+                         fromaddr=LOGNAME,
+                         toaddrs=EMAIL_TO_ADDRESS,
+                         subject=LOGNAME)
         sh.setLevel(logging.ERROR)
-        sh.setFormatter(_formatter)
+        sh.setFormatter(FORMATTER)
         logger.addHandler(sh)
         logger.info("メール通知機能を使います、エラー以上は通知されます")
     except ConnectionRefusedError:
@@ -97,10 +117,10 @@ def enableEMailNotification(
 def enableDesktopNotification(commandType="notifiy-send"):
     try:
         if(commandType=="notifiy-send"):
-            output = subprocess.check_output(["notify-send","--version"])
+            _ = subprocess.check_output(["notify-send","--version"])
             logger.info("デスクトップ通知機能のnotify-sendを使います、エラー以上は通知されます")
         elif(commandType=="zenity"):
-            output = subprocess.check_output(["zenity","--help"])
+            _ = subprocess.check_output(["zenity","--help"])
             logger.info("デスクトップ通知機能のzenityを使います、エラー以上は通知されます")
         else:
             return
@@ -114,7 +134,7 @@ def enableDesktopNotification(commandType="notifiy-send"):
                     subprocess.call(command)
         nh = NotifyHandler()
         nh.setLevel(logging.ERROR)
-        nh.setFormatter(_formatter)
+        nh.setFormatter(FORMATTER)
         logger.addHandler(nh)
     except FileNotFoundError:
         logger.warning("デスクトップ通知機能が使えません")
