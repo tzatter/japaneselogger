@@ -28,7 +28,7 @@ if __name__ == '__main__':
 03/23 22:16:44 ERROR main.py 5 エラー
 03/23 22:16:44 ERROR main.py 9 ゼロで割ってはいけません
 Traceback (most recent call last):
-  File "/home/takasi/workspace/logger_py/test/main.py", line 7, in <module>
+  File "/home/tzatter/workspace/logger_py/test/main.py", line 7, in <module>
     num = 1/0
 ZeroDivisionError: division by zero
 ```
